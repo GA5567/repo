@@ -1,0 +1,55 @@
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+export default function DrCleara() {
+  const [messages, setMessages] = useState([
+    { from: "bot", text: "Hi, I'm Dr. Cleara. Tell me what’s going on with your skin today." },
+  ]);
+  const [input, setInput] = useState("");
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+
+    const userMessage = { from: "user", text: input };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+
+    const response = await fetch("/api/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: input })
+    });
+    const data = await response.json();
+
+    const botMessage = { from: "bot", text: data.reply };
+    setMessages((prev) => [...prev, botMessage]);
+  };
+
+  return (
+    <div className="max-w-xl mx-auto p-4">
+      <Card className="h-[80vh] overflow-y-auto space-y-4 p-4">
+        {messages.map((msg, idx) => (
+          <div
+            key={idx}
+            className={`text-sm p-2 rounded-xl w-fit max-w-[75%] ${
+              msg.from === "bot" ? "bg-blue-100 text-black" : "bg-green-200 text-black ml-auto"
+            }`}
+          >
+            {msg.text}
+          </div>
+        ))}
+      </Card>
+
+      <div className="flex gap-2 mt-4">
+        <Input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Describe your skin issue..."
+        />
+        <Button onClick={sendMessage}>Send</Button>
+      </div>
+    </div>
+  );
+}
